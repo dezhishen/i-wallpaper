@@ -6,6 +6,7 @@ import (
 	"io"
 	"math/rand"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -42,15 +43,15 @@ func (p *bingProvider) GetTody() (*ImageSource, error) {
 	}
 	defer res.Body.Close()
 	body, _ := io.ReadAll(res.Body)
-	fmt.Println(string(body))
 	var bingR bingResult
 	err = json.Unmarshal(body, &bingR)
 	if err != nil {
+		fmt.Println(string(body))
 		return nil, err
 	}
 	return &ImageSource{
 		Type:   UrlSource,
-		Source: fmt.Sprintf("%s/%s", p.endpoint, bingR.Images[0].Url),
+		Source: fmt.Sprintf("%s/%s", p.endpoint, strings.ReplaceAll(bingR.Images[0].Url, "1920x1080", "UHD")),
 	}, nil
 }
 
@@ -64,17 +65,17 @@ func (p *bingProvider) Random() (*ImageSource, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	defer res.Body.Close()
 	body, _ := io.ReadAll(res.Body)
 	var bingR bingResult
 	err = json.Unmarshal(body, &bingR)
 	if err != nil {
+		fmt.Println(string(body))
 		return nil, err
 	}
 	return &ImageSource{
 		Type:   UrlSource,
-		Source: fmt.Sprintf("%s/%s", p.endpoint, pick(bingR.Images).Url),
+		Source: fmt.Sprintf("%s/%s", p.endpoint, strings.ReplaceAll(pick(bingR.Images).Url, "1920x1080", "UHD")),
 	}, nil
 }
 
