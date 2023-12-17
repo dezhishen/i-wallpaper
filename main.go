@@ -1,36 +1,22 @@
 package main
 
 import (
-	"github.com/dezhishen/i-wallpaper/provider"
-	"github.com/reujab/wallpaper"
+	"github.com/dezhishen/i-wallpaper/pkg/config"
+	"github.com/dezhishen/i-wallpaper/pkg/gui"
+	"github.com/dezhishen/i-wallpaper/pkg/provider"
 )
 
-type BingResponse struct {
-	Images []BingImage `json:"images"`
-}
-
-type BingImage struct {
-	Url string `json:"url,omitempty"`
-}
-
 func main() {
-	p := provider.NewBingProvider()
-	source, err := p.Random()
-	check(err)
-	switch source.Type {
-	case provider.UrlSource:
-		err = wallpaper.SetFromURL(source.Source)
-		check(err)
-	case provider.FileSource:
-		err = wallpaper.SetFromFile(source.Source)
-		check(err)
-	default:
-		panic("unsupport")
+	// 加载配置
+	err := config.Init("config", "config")
+	if err != nil {
+		panic(err)
 	}
-	err = wallpaper.SetMode(wallpaper.Crop)
-	check(err)
-}
-func check(err error) {
+	err = provider.Init()
+	if err != nil {
+		panic(err)
+	}
+	err = gui.Start()
 	if err != nil {
 		panic(err)
 	}

@@ -1,0 +1,8 @@
+provider:
+  current: bing
+  all:
+    bing:
+      endpoint: https://cn.bing.com
+      rand-count: 100
+gui:
+  disabled: true

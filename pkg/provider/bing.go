@@ -6,9 +6,15 @@ import (
 	"io"
 	"math/rand"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
+
+type CustomConfig struct {
+	Endpoint  string `yaml:"endpoint"`
+	RandCount uint   `yaml:"rand-count"`
+}
 
 type bingImage struct {
 	Url string `json:"url,omitempty"`
@@ -21,13 +27,53 @@ type bingResult struct {
 // "https://cn.bing.com"
 
 type bingProvider struct {
-	endpoint string
+	endpoint  string
+	randCount uint
 }
 
-func NewBingProvider() Provider {
-	return &bingProvider{
-		endpoint: "https://cn.bing.com",
+type bingFactory struct {
+}
+
+func (f *bingFactory) Name() string {
+	return "bing"
+}
+func (f *bingFactory) New(configOfMap map[string]interface{}) (Provider, error) {
+	c := CustomConfig{}
+	if v, ok := configOfMap["endpoint"]; ok {
+		c.Endpoint = fmt.Sprintf("%v", v)
 	}
+
+	if v, ok := configOfMap["rand-count"]; ok {
+		readCountStr := fmt.Sprintf("%v", v)
+		if readCountStr != "" {
+			count, err := strconv.Atoi(readCountStr)
+			if err != nil {
+				return nil, err
+			}
+			c.RandCount = uint(count)
+		}
+	}
+	return NewBingProvider(c), nil
+}
+func init() {
+	addFactory(&bingFactory{})
+}
+
+func NewBingProvider(conf CustomConfig) Provider {
+	if conf.Endpoint == "" {
+		conf.Endpoint = "https://cn.bing.com"
+	}
+	if conf.RandCount == 0 {
+		conf.RandCount = 8
+	}
+	return &bingProvider{
+		endpoint:  conf.Endpoint,
+		randCount: conf.RandCount,
+	}
+}
+
+func (p *bingProvider) Name() string {
+	return "bing"
 }
 
 // impl provider provider
