@@ -9,6 +9,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/layout"
+	"fyne.io/fyne/v2/widget"
 )
 
 type CustomConfig struct {
@@ -74,6 +78,17 @@ func NewBingProvider(conf CustomConfig) Provider {
 
 func (p *bingProvider) Name() string {
 	return "bing"
+}
+
+func (p *bingProvider) NewTabItem() *container.TabItem {
+	endpointLabel := widget.NewLabel("端点")
+	content := container.New(layout.NewFormLayout())
+	content.Add(endpointLabel)
+	input := widget.NewEntry()
+	input.SetPlaceHolder("输入端点")
+	input.SetText(p.endpoint)
+	content.Add(input)
+	return container.NewTabItem(p.Name(), content)
 }
 
 // impl provider provider
