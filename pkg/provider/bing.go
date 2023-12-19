@@ -6,7 +6,6 @@ import (
 	"io"
 	"math/rand"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -17,7 +16,7 @@ import (
 
 type CustomConfig struct {
 	Endpoint  string `yaml:"endpoint"`
-	RandCount uint   `yaml:"rand-count"`
+	RandCount string `yaml:"rand-count"`
 }
 
 type bingImage struct {
@@ -32,7 +31,7 @@ type bingResult struct {
 
 type bingProvider struct {
 	endpoint  string
-	randCount uint
+	randCount string
 }
 
 type bingFactory struct {
@@ -50,11 +49,9 @@ func (f *bingFactory) New(configOfMap map[string]interface{}) (Provider, error) 
 	if v, ok := configOfMap["rand-count"]; ok {
 		readCountStr := fmt.Sprintf("%v", v)
 		if readCountStr != "" {
-			count, err := strconv.Atoi(readCountStr)
-			if err != nil {
-				return nil, err
-			}
-			c.RandCount = uint(count)
+			c.RandCount = readCountStr
+		} else {
+			c.RandCount = "7"
 		}
 	}
 	return NewBingProvider(c), nil
@@ -67,8 +64,8 @@ func NewBingProvider(conf CustomConfig) Provider {
 	if conf.Endpoint == "" {
 		conf.Endpoint = "https://cn.bing.com"
 	}
-	if conf.RandCount == 0 {
-		conf.RandCount = 8
+	if conf.RandCount == "" {
+		conf.RandCount = "7"
 	}
 	return &bingProvider{
 		endpoint:  conf.Endpoint,
@@ -81,13 +78,27 @@ func (p *bingProvider) Name() string {
 }
 
 func (p *bingProvider) NewTabItem() *container.TabItem {
+	content := container.New(layout.NewVBoxLayout())
+	// endpoint
 	endpointLabel := widget.NewLabel("端点")
-	content := container.New(layout.NewFormLayout())
-	content.Add(endpointLabel)
-	input := widget.NewEntry()
-	input.SetPlaceHolder("输入端点")
-	input.SetText(p.endpoint)
-	content.Add(input)
+	endpointInput := widget.NewEntry()
+	endpointInput.SetPlaceHolder("输入端点")
+	endpointInput.SetText(p.endpoint)
+	content.Add(container.New(layout.NewFormLayout(), endpointLabel, endpointInput))
+	// content.Add(endpointInput)
+	// content.Add(layout.NewSpacer())
+	// randCount
+	randCountLabel := widget.NewLabel("随机图片集数量")
+	randCountInput := widget.NewSelect([]string{"7", "14", "30"}, func(s string) {
+	})
+	randCountInput.SetSelected(p.randCount)
+	content.Add(container.New(layout.NewFormLayout(), randCountLabel, randCountInput))
+	// saveBtn
+	btn := widget.NewButton("保存", func() {
+		p.endpoint = endpointInput.Text
+		p.randCount = randCountInput.Selected
+	})
+	content.Add(btn)
 	return container.NewTabItem(p.Name(), content)
 }
 

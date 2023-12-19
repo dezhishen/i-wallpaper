@@ -1,15 +1,2 @@
 provider:
-  current: bing
-  all:
-    bing:
-      endpoint: https://cn.bing.com
-      rand-count: 100
-      cache-path: ./data/bing
-    dir:
-      path: ./images
-      match-suffix:
-      - .jpg
-      - .jpeg
-      - .png
-gui:
-  disabled: true
+    current: bing

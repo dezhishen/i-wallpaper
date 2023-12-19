@@ -14,7 +14,7 @@ func Apply(pickType provider.PickType, p provider.Provider) error {
 	case provider.TodayPick:
 		source, err = p.GetTody()
 	case provider.RandomPick:
-		source, err = p.GetTody()
+		source, err = p.Random()
 	default:
 		err = errors.New("不支持的壁纸选择方式")
 	}

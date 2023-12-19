@@ -2,9 +2,13 @@ package gui
 
 import (
 	"errors"
+	"fmt"
 
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/layout"
+	"fyne.io/fyne/v2/widget"
+	"github.com/dezhishen/i-wallpaper/pkg/apply"
 	"github.com/dezhishen/i-wallpaper/pkg/config"
 	"github.com/dezhishen/i-wallpaper/pkg/provider"
 	"github.com/sirupsen/logrus"
@@ -46,8 +50,39 @@ func Start() error {
 			logrus.Warnf("壁纸提供方式【%s】未提供配置界面", p.Name())
 		}
 	}
+	currentProvider, _ := provider.Get(conf.Current)
+	onSelectedProvider := func(e *container.TabItem) {
+		currentProvider, _ = provider.Get(e.Text)
+	}
+	tabs.OnSelected = onSelectedProvider
 	tabs.SetTabLocation(container.TabLocationLeading)
-	myWindow.SetContent(tabs)
+	content := container.New(layout.NewVBoxLayout())
+	content.Add(tabs)
+	currentPick := provider.TodayPick
+	pickSelected := widget.NewSelect(
+		[]string{
+			fmt.Sprintf("%d", provider.RandomPick),
+			fmt.Sprintf("%d", provider.TodayPick),
+		},
+		func(s string) {
+			switch s {
+			case fmt.Sprintf("%d", provider.RandomPick):
+				currentPick = provider.RandomPick
+				return
+			default:
+				currentPick = provider.TodayPick
+				return
+			}
+		},
+	)
+	pickSelected.SetSelected(fmt.Sprintf("%d", currentPick))
+	content.Add(container.New(layout.NewFormLayout(),
+		pickSelected,
+		widget.NewButton("生效", func() {
+			logrus.Infof("apply %d of %s", currentPick, currentProvider.Name())
+			apply.Apply(currentPick, currentProvider)
+		})))
+	myWindow.SetContent(content)
 	myWindow.ShowAndRun()
 	return nil
 }

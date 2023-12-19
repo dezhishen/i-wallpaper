@@ -2,9 +2,11 @@ package config
 
 import (
 	"errors"
+	"os"
 	"reflect"
 	"sync"
 
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -15,16 +17,54 @@ var appConfig *viper.Viper
 func Init(path string, name string) error {
 	lock.Lock()
 	defer lock.Unlock()
+	// 如果文件夹不存在，则创建
 	appConfig = viper.New()
+	err := mkdirAll(path)
+	if err != nil {
+		return err
+	}
 	appConfig.AddConfigPath(path)
 	appConfig.SetConfigName(name)
-	err := appConfig.ReadInConfig()
+	appConfig.SetConfigType("yaml")
+	err = appConfig.ReadInConfig()
 	if err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			// 配置文件未找到错误；如果需要可以忽略
+			appConfig.Set("provider.current", "bing")
+			err := appConfig.SafeWriteConfig()
+			if err != nil {
+				logrus.Warnf("配置文件初始化错误，%v", err)
+				return err
+			}
+		} else {
+			logrus.Warnf("配置文件读取错误，%v", err)
+			return err
+		}
+	}
+	return nil
+}
+
+func mkdirAll(p string) error {
+	if !isExist(p) {
+		err := os.MkdirAll(p, os.ModePerm)
 		return err
 	}
 	return nil
 }
 
+func isExist(path string) bool {
+	_, err := os.Stat(path)
+	if err != nil {
+		if os.IsExist(err) {
+			return true
+		}
+		if os.IsNotExist(err) {
+			return false
+		}
+		return false
+	}
+	return true
+}
 func Unmarshal(key string, v interface{}) error {
 	pv := reflect.ValueOf(v)
 	if pv.Kind() != reflect.Ptr {
