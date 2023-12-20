@@ -21,6 +21,8 @@ const (
 	RandomPick
 )
 
+var PickTypeLabel = []string{"今日", "随机"}
+
 type ImageSource struct {
 	Type   sourceType
 	Source string

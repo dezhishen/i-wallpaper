@@ -2,7 +2,6 @@ package gui
 
 import (
 	"errors"
-	"fmt"
 
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
@@ -60,13 +59,10 @@ func Start() error {
 	content.Add(tabs)
 	currentPick := provider.TodayPick
 	pickSelected := widget.NewSelect(
-		[]string{
-			fmt.Sprintf("%d", provider.RandomPick),
-			fmt.Sprintf("%d", provider.TodayPick),
-		},
+		provider.PickTypeLabel,
 		func(s string) {
 			switch s {
-			case fmt.Sprintf("%d", provider.RandomPick):
+			case "随机":
 				currentPick = provider.RandomPick
 				return
 			default:
@@ -75,13 +71,20 @@ func Start() error {
 			}
 		},
 	)
-	pickSelected.SetSelected(fmt.Sprintf("%d", currentPick))
+	pickSelected.SetSelected(provider.PickTypeLabel[currentPick])
 	content.Add(container.New(layout.NewFormLayout(),
+		widget.NewLabel("壁纸选择方式"),
 		pickSelected,
-		widget.NewButton("生效", func() {
-			logrus.Infof("apply %d of %s", currentPick, currentProvider.Name())
-			apply.Apply(currentPick, currentProvider)
-		})))
+	))
+	content.Add(container.NewHBox(
+		widget.NewButton(
+			"应用",
+			func() {
+				logrus.Infof("apply %d of %s", currentPick, currentProvider.Name())
+				apply.Apply(currentPick, currentProvider)
+			},
+		),
+	))
 	myWindow.SetContent(content)
 	myWindow.ShowAndRun()
 	return nil
